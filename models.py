@@ -128,58 +128,57 @@ class WGAN:
         for g_iter in range(self.max_iters):
             for p in self.D.parameters():
                 p.requires_grad = True
-        
-        d_loss_real = 0
-        d_loss_fake = 0
-        W_loss = 0
+            
+            d_loss_real = 0
+            d_loss_fake = 0
+            W_loss = 0
 
-        self.G.train()
+            self.G.train()
 
-        for d_iter in range(self.n_critic):
-            self.D.zero_grad()
+            for d_iter in range(self.n_critic):
+                self.D.zero_grad()
+                self.G.zero_grad()
+
+                real = torch.autograd.Variable(data.__next__()).float().to(self.device)
+                batch_size = real.size(0)
+
+                d_loss_real = self.D(real)
+                d_loss_real = d_loss_real.mean()
+
+                z = torch.randn(batch_size,1,self.seq_len).to(self.device)
+                fake = self.G(z)  
+                d_loss_fake = self.D(fake)
+                d_loss_fake = d_loss_fake.mean()
+
+                d_loss = d_loss_fake - d_loss_real
+                d_loss.backward()
+                W_loss = -d_loss
+
+                self.d_optimizer.step()
+                print(f'Discriminator iteration: {d_iter}/{self.n_critic}, loss_fake: {d_loss_fake}, loss_real: {d_loss_real}')
+
             self.G.zero_grad()
-
-            real = torch.autograd.Variable(data.__next__()).float().to(self.device)
-            batch_size = real.size(0)
-
-            d_loss_real = self.D(real)
-            d_loss_real = d_loss_real.mean()
+            self.D.zero_grad()
 
             z = torch.randn(batch_size,1,self.seq_len).to(self.device)
-            fake = self.G(z)  
-            d_loss_fake = self.D(fake)
-            d_loss_fake = d_loss_fake.mean()
+            fake = self.G(z)
+            g_loss = self.D(fake)
+            g_loss = - g_loss.mean()
+            g_loss.backward()
 
-            d_loss = d_loss_fake - d_loss_real
-            d_loss.backward()
-            W_loss = -d_loss
+            self.g_optimizer.step()
+            print(f'Generator iteration: {g_iter}/{self.max_iters}, g_loss: {g_loss}')
 
-            self.d_optimizer.step()
-            print(f'Discriminator iteration: {d_iter}/{self.n_critic}, loss_fake: {d_loss_fake}, loss_real: {d_loss_real}')
-
-        self.G.zero_grad()
-        self.D.zero_grad()
-
-        z = torch.randn(batch_size,1,self.seq_len).to(self.device)
-        fake = self.G(z)
-        g_loss = self.D(fake)
-        g_loss = - g_loss.mean()
-        g_loss.backward()
-
-        self.g_optimizer.step()
-        print(f'Generator iteration: {g_iter}/{self.max_iters}, g_loss: {g_loss}')
-
-        if g_iter % 10 == 0:
-            self.save_model()
-            fig = self.plot_synth()
-            img = self.fig2img(fig)
-            self.write2board(g_iter,d_loss,g_loss,W_loss,img)
+            if g_iter % 10 == 0:
+                self.save_model()
+                img = self.plot_synth()
+                self.write2board(g_iter,d_loss,g_loss,W_loss,img)
 
 
-        self.g_loss_history.append(g_loss)
-        self.d_loss_history.append(d_loss)
+            self.g_loss_history.append(g_loss)
+            self.d_loss_history.append(d_loss)
 
-        torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
 
         self.save_model()
         print("Finished Training!!")
@@ -212,14 +211,14 @@ class WGAN:
             ax.plot(fake[i,1,:],label="y-axis")
             ax.plot(fake[i,2,:],label="z-axis")
             ax.legend()
+            ax.margins(0)
 
-        return plt.figure()
-
-    def fig2img(self,figure):
-        img = np.fromstring(figure.canvas.tostring_rgb(),dtype= np.uint8,sep=' ')
-        img  = img.reshape(figure.canvas.get_width_height()[::-1] + (3,))
-        
+        fig.canvas.draw()
+        img = np.frombuffer(fig.canvas.tostring_rgb(),dtype= np.uint8)
+        img  = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        img = np.transpose(img,(2,0,1))
         return img
+
 
 
 
