@@ -169,7 +169,7 @@ class WGAN:
             self.g_optimizer.step()
             print(f'Generator iteration: {g_iter}/{self.max_iters}, g_loss: {g_loss}')
 
-            if g_iter % 10 == 0:
+            if g_iter % 50 == 0:
                 self.save_model()
                 img = self.plot_synth()
                 self.write2board(g_iter,d_loss,g_loss,W_loss,img)
