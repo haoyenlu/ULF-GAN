@@ -202,7 +202,7 @@ class WGAN:
     def plot_synth(self):
         self.G.eval()
         z = torch.randn(self.sample_size,1,self.seq_len).to(self.device)
-        fake = self.G(z).detach().numpy()
+        fake = self.G(z).detach().cpu().numpy()
         
         fig = plt.figure(figsize=(15,3))
         for i in range(self.sample_size):
