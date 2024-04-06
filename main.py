@@ -56,7 +56,7 @@ if __name__ == '__main__':
     dataloader = torch.utils.data.DataLoader(train_data,args.batch_size,shuffle=True)
 
     wgan = WGAN(seq_len = seq_len, features=3,g_hidden=args.g_hidden,d_hidden=args.d_hidden,max_iters=args.max_iter,
-            saveDir=args.saveDit,ckptPath=args.ckpt)
+            saveDir=args.saveDir,ckptPath=args.ckpt)
     
     wgan.train(dataloader,show_summary=True)
 
