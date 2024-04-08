@@ -107,9 +107,6 @@ class WGAN:
         self.d_hidden = d_hidden
         self.prefix = prefix
 
-        self.g_loss_history = []
-        self.d_loss_history = []
-
         self.writer = SummaryWriter()
 
     def train(self,dataloader,show_summary=False):
@@ -129,9 +126,6 @@ class WGAN:
             for p in self.D.parameters():
                 p.requires_grad = True
             
-            d_loss_real = 0
-            d_loss_fake = 0
-            W_loss = 0
 
             self.G.train()
 
@@ -171,11 +165,8 @@ class WGAN:
             if g_iter % 50 == 0:
                 self.save_model()
                 img = self.plot_synth()
-                self.write2board(g_iter,d_loss,g_loss,W_loss,img)
+                self.write2board(g_iter,d_loss,g_loss,img)
 
-
-            self.g_loss_history.append(g_loss)
-            self.d_loss_history.append(d_loss)
 
             torch.cuda.empty_cache()
 
@@ -206,10 +197,9 @@ class WGAN:
         torch.save({"G_param":self.G.state_dict(),"D_param":self.D.state_dict()},
                 f"{self.saveDir}/{self.prefix}_net_G{self.g_hidden}_D{self.d_hidden}_ckpt.pth")
     
-    def write2board(self,iter,d_loss,g_loss,w_loss,img):
+    def write2board(self,iter,d_loss,g_loss,img):
         self.writer.add_scalar('Loss/D_loss',d_loss,iter)
         self.writer.add_scalar('Loss/G_loss',g_loss,iter)
-        self.writer.add_scalar('Loss/W_distance',w_loss,iter)
         self.writer.add_image('Samples',img,iter)
     
     def plot_synth(self):
