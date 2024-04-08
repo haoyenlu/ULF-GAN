@@ -210,10 +210,8 @@ class WGAN:
         fig = plt.figure(figsize=(15,3))
         for i in range(self.sample_size):
             ax = fig.add_subplot(1,self.sample_size,i+1)
-            ax.plot(fake[i,0,:],label="x-axis")
-            ax.plot(fake[i,1,:],label="y-axis")
-            ax.plot(fake[i,2,:],label="z-axis")
-            ax.legend()
+            for j in range(self.features):
+                ax.plot(fake[i,j,:])
             ax.margins(0)
 
         fig.canvas.draw()
