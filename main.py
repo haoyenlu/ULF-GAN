@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     print(args.max_iter)
     wgan = WGAN(seq_len = seq_len, features=feat,g_hidden=args.g_hidden,d_hidden=args.d_hidden,max_iters=args.max_iter,
-            saveDir=args.saveDir,ckptPath=args.ckpt)
+            saveDir=args.saveDir,ckptPath=args.ckpt,prefix=args.task)
     
     wgan.train(dataloader,show_summary=True)
 
