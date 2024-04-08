@@ -69,6 +69,7 @@ class Discriminator(nn.Module):
         )
 
         self.last = nn.Linear(hidden_dim*2*sequence_len//4,1)
+        self.sigmoid = nn.Sigmoid()
 
     
     def forward(self,x):
@@ -76,6 +77,7 @@ class Discriminator(nn.Module):
         _x = self.conv2(_x)
         _x = torch.flatten(_x,start_dim=1)
         _x = self.last(_x)
+        _x = self.sigmoid(_x)
         return _x
   
 
@@ -87,11 +89,7 @@ class WGAN:
         self.G = Generator(seq_len,features,g_hidden).to(self.device)
         self.D = Discriminator(seq_len,features,d_hidden).to(self.device)
 
-        if ckptPath:
-            print("Load Checkpoint....")
-            ckpt = torch.load(ckptPath)
-            self.G.load_state_dict(ckpt['G_param'])
-            self.D.load_state_dict(ckpt['D_param'])
+        self.load_ckpt(ckptPath)
 
         self.lr = 5e-4
         self.n_critic = 5
@@ -119,10 +117,11 @@ class WGAN:
             summary(self.D,(self.features,self.seq_len))
         
 
-        fixed_noise = torch.randn(self.sample_size,1,self.seq_len).to(self.device)
-
         data = self.get_infinite_batch(dataloader)
         batch_size = 4
+
+        
+        criterion = nn.BCELoss()
 
 
         for g_iter in range(self.max_iters):
@@ -142,17 +141,17 @@ class WGAN:
                 real = torch.autograd.Variable(data.__next__()).float().to(self.device)
                 batch_size = real.size(0)
 
-                d_loss_real = self.D(real)
-                d_loss_real = d_loss_real.mean()
+                real_label = torch.autograd.Variable(torch.Tensor(batch_size, 1).fill_(1), requires_grad=False)
+                fake_label = torch.autograd.Variable(torch.Tensor(batch_size, 1).fill_(0), requires_grad=False)
+
+                d_loss_real = criterion(self.D(real),real_label)
 
                 z = torch.randn(batch_size,1,self.seq_len).to(self.device)
                 fake = self.G(z)  
-                d_loss_fake = self.D(fake)
-                d_loss_fake = d_loss_fake.mean()
+                d_loss_fake = criterion(self.D(fake),fake_label)
 
-                d_loss = d_loss_fake - d_loss_real
+                d_loss = d_loss_fake + d_loss_real
                 d_loss.backward()
-                W_loss = -d_loss
 
                 self.d_optimizer.step()
                 print(f'Discriminator iteration: {d_iter}/{self.n_critic}, loss_fake: {d_loss_fake}, loss_real: {d_loss_real}')
@@ -162,8 +161,7 @@ class WGAN:
 
             z = torch.randn(batch_size,1,self.seq_len).to(self.device)
             fake = self.G(z)
-            g_loss = self.D(fake)
-            g_loss = - g_loss.mean()
+            g_loss = criterion(self.D(fake),real_label)
             g_loss.backward()
 
             self.g_optimizer.step()
@@ -182,12 +180,26 @@ class WGAN:
 
         self.save_model()
         print("Finished Training!!")
+    
 
+    def load_ckpt(self,ckptPath):
+        if ckptPath:
+            print("Load Checkpoint....")
+            ckpt = torch.load(ckptPath,map_location=self.device)
+            self.G.load_state_dict(ckpt['G_param'])
+            self.D.load_state_dict(ckpt['D_param'])
 
     def get_infinite_batch(self,dataloader):
         while True:
             for data in dataloader:
                 yield data
+
+    def generate_samples(self,sample_size):
+        z = torch.randn(sample_size,1,self.seq_len).to(self.device)
+        fakes = self.G(z).detach().cpu().numpy()
+        
+        return fakes
+
 
     def save_model(self):
         torch.save({"G_param":self.G.state_dict(),"D_param":self.D.state_dict()},
