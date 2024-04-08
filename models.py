@@ -82,7 +82,7 @@ class Discriminator(nn.Module):
   
 
 class WGAN:
-    def __init__(self,seq_len,features=3,g_hidden=64,d_hidden=64,max_iters=1000,saveDir=None,ckptPath=None):
+    def __init__(self,seq_len,features=3,g_hidden=64,d_hidden=64,max_iters=1000,saveDir=None,ckptPath=None,prefix="T01"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print("Train on {}".format(self.device))
 
@@ -105,6 +105,7 @@ class WGAN:
         self.saveDir = saveDir
         self.g_hidden = g_hidden
         self.d_hidden = d_hidden
+        self.prefix = prefix
 
         self.g_loss_history = []
         self.d_loss_history = []
@@ -203,7 +204,7 @@ class WGAN:
 
     def save_model(self):
         torch.save({"G_param":self.G.state_dict(),"D_param":self.D.state_dict()},
-                f"{self.saveDir}/net_G-{self.g_hidden}_D-{self.d_hidden}_ckpt.pth")
+                f"{self.saveDir}/{self.prefix}_net_G{self.g_hidden}_D{self.d_hidden}_ckpt.pth")
     
     def write2board(self,iter,d_loss,g_loss,w_loss,img):
         self.writer.add_scalar('Loss/D_loss',d_loss,iter)
