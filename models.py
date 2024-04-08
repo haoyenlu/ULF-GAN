@@ -141,8 +141,8 @@ class WGAN:
                 real = torch.autograd.Variable(data.__next__()).float().to(self.device)
                 batch_size = real.size(0)
 
-                real_label = torch.autograd.Variable(torch.Tensor(batch_size, 1).fill_(1), requires_grad=False)
-                fake_label = torch.autograd.Variable(torch.Tensor(batch_size, 1).fill_(0), requires_grad=False)
+                real_label = torch.autograd.Variable(torch.Tensor(batch_size, 1).fill_(1), requires_grad=False).to(self.device)
+                fake_label = torch.autograd.Variable(torch.Tensor(batch_size, 1).fill_(0), requires_grad=False).to(self.device)
 
                 d_loss_real = criterion(self.D(real),real_label)
 
