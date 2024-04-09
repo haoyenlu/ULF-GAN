@@ -195,8 +195,8 @@ class WGAN:
         return fakes
     
     def spectral_loss(self,real,fake):
-        fake_fft = np.abs(np.fft.fft(fake))
-        real_fft = np.abs(np.fft.fft(real))
+        fake_fft = torch.abs(torch.fft.rfft(fake))
+        real_fft = torch.abs(torch.fft.rfft(real))
         loss = torch.mean(torch.square(real_fft - fake_fft))
         return loss
 
