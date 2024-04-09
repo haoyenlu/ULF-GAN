@@ -60,6 +60,7 @@ if __name__ == '__main__':
     dataloader = torch.utils.data.DataLoader(train_data,args.batch_size,shuffle=True)
 
     print(args.max_iter)
+    print(feat,seq_len)
     wgan = WGAN(seq_len = seq_len, features=feat,n_critic=args.n_critic,g_hidden=args.g_hidden,d_hidden=args.d_hidden,max_iters=args.max_iter,
             saveDir=args.saveDir,ckptPath=args.ckpt,prefix=args.task)
     
