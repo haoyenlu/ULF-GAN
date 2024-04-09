@@ -147,11 +147,18 @@ class WGAN:
                 d_loss_fake = criterion(self.D(fake),fake_label)
 
                 d_loss = d_loss_fake + d_loss_real
-                if self.use_spectral: d_loss + 0.5 * self.spectral_loss(real,fake)
+
+                if self.use_spectral: 
+                    sp_loss = self.spectral_loss(real,fake)
+                    d_loss += 0.5 * sp_loss
+                    
                 d_loss.backward()
 
                 self.d_optimizer.step()
-                print(f'Discriminator iteration: {d_iter}/{self.n_critic}, loss_fake: {d_loss_fake}, loss_real: {d_loss_real}')
+                if self.use_spectral:
+                    print(f'Discriminator iteration: {d_iter}/{self.n_critic}, loss_fake: {d_loss_fake}, loss_real: {d_loss_real}, spectral_loss: {sp_loss}')
+                else:
+                    print(f'Discriminator iteration: {d_iter}/{self.n_critic}, loss_fake: {d_loss_fake}, loss_real: {d_loss_real}')
 
             self.G.zero_grad()
             self.D.zero_grad()
