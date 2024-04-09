@@ -82,7 +82,7 @@ class Discriminator(nn.Module):
   
 
 class WGAN:
-    def __init__(self,seq_len,features=3,n_critic=3,g_hidden=64,d_hidden=64,max_iters=1000,saveDir=None,ckptPath=None,prefix="T01"):
+    def __init__(self,seq_len,features=3,n_critic=3,g_hidden=64,d_hidden=64,max_iters=1000,saveDir=None,ckptPath=None,prefix="T01",use_spectral=False):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print("Train on {}".format(self.device))
 
@@ -106,6 +106,7 @@ class WGAN:
         self.g_hidden = g_hidden
         self.d_hidden = d_hidden
         self.prefix = prefix
+        self.use_spectral = use_spectral
 
         self.writer = SummaryWriter()
 
@@ -146,6 +147,7 @@ class WGAN:
                 d_loss_fake = criterion(self.D(fake),fake_label)
 
                 d_loss = d_loss_fake + d_loss_real
+                if self.use_spectral: d_loss + 0.5 * self.spectral_loss(real,fake)
                 d_loss.backward()
 
                 self.d_optimizer.step()
@@ -191,7 +193,12 @@ class WGAN:
         fakes = self.G(z).detach().cpu().numpy()
         
         return fakes
-
+    
+    def spectral_loss(self,real,fake):
+        fake_fft = np.abs(np.fft.fft(fake))
+        real_fft = np.abs(np.fft.fft(real))
+        loss = torch.mean(torch.square(real_fft - fake_fft))
+        return loss
 
     def save_model(self):
         torch.save({"G_param":self.G.state_dict(),"D_param":self.D.state_dict()},
