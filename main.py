@@ -47,7 +47,7 @@ if __name__ == '__main__':
     parser.add_argument('--d_hidden',type=int,help="Discriminator hidden channel size",default=64)
     parser.add_argument('--task',help="Task to train on",default='T01')
     parser.add_argument('--n_critic',type=int,help="Number of iterations for Discriminator per one Generator iterations",default=5)
-
+    parser.add_argument('--use_spectral',action='store_true')
 
 
     args = parser.parse_args()
@@ -61,8 +61,9 @@ if __name__ == '__main__':
 
     print(args.max_iter)
     print(feat,seq_len)
+    print("Use Spectral Loss:{}".format(args.use_spectral))
     wgan = WGAN(seq_len = seq_len, features=feat,n_critic=args.n_critic,g_hidden=args.g_hidden,d_hidden=args.d_hidden,max_iters=args.max_iter,
-            saveDir=args.saveDir,ckptPath=args.ckpt,prefix=args.task)
+            saveDir=args.saveDir,ckptPath=args.ckpt,prefix=args.task,use_spectral=args.use_spectral)
     
     wgan.train(dataloader,show_summary=True)
 
