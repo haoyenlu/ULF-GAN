@@ -82,7 +82,7 @@ class Discriminator(nn.Module):
   
 
 class WGAN:
-    def __init__(self,seq_len,features=3,g_hidden=64,d_hidden=64,max_iters=1000,saveDir=None,ckptPath=None,prefix="T01"):
+    def __init__(self,seq_len,features=3,n_critic=3,g_hidden=64,d_hidden=64,max_iters=1000,saveDir=None,ckptPath=None,prefix="T01"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print("Train on {}".format(self.device))
 
@@ -92,7 +92,7 @@ class WGAN:
         self.load_ckpt(ckptPath)
 
         self.lr = 5e-4
-        self.n_critic = 5
+        self.n_critic = n_critic
 
         self.g_optimizer = torch.optim.RMSprop(self.G.parameters(),lr=self.lr)
         self.d_optimizer = torch.optim.RMSprop(self.D.parameters(),lr=self.lr)

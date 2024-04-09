@@ -46,6 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('--g_hidden',type=int,help="Generator hidden channel size",default=64)
     parser.add_argument('--d_hidden',type=int,help="Discriminator hidden channel size",default=64)
     parser.add_argument('--task',help="Task to train on",default='T01')
+    parser.add_argument('--n_critic',type=int,help="Number of iterations for Discriminator per one Generator iterations",default=5)
 
 
 
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     dataloader = torch.utils.data.DataLoader(train_data,args.batch_size,shuffle=True)
 
     print(args.max_iter)
-    wgan = WGAN(seq_len = seq_len, features=feat,g_hidden=args.g_hidden,d_hidden=args.d_hidden,max_iters=args.max_iter,
+    wgan = WGAN(seq_len = seq_len, features=feat,n_critic=args.n_critic,g_hidden=args.g_hidden,d_hidden=args.d_hidden,max_iters=args.max_iter,
             saveDir=args.saveDir,ckptPath=args.ckpt,prefix=args.task)
     
     wgan.train(dataloader,show_summary=True)
