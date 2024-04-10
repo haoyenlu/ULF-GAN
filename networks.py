@@ -11,12 +11,14 @@ from models import Generator, Discriminator, EEG_Generator , EEG_Discriminator
 
 class GAN:
     def __init__(self,seq_len,features=3,n_critic=3,lr=5e-4,g_hidden=64,d_hidden=64,max_iters=1000,
-                 saveDir=None,ckptPath=None,prefix="T01",use_spectral=False,use_eeg=False):
+                 saveDir=None,ckptPath=None,prefix="T01",
+                 use_spectral=False,use_eeg=False,use_board=False):
         
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print("Train on {}".format(self.device))
 
         self.use_eeg = use_eeg
+        self.use_board = use_board
     
         if self.use_eeg:
             self.G = EEG_Generator(seq_len,features,g_hidden).to(self.device)
@@ -109,13 +111,15 @@ class GAN:
 
             if g_iter % 50 == 0:
                 self.save_model()
-                img = self.plot_synth()
-                self.write2board(g_iter,d_loss,g_loss,img)
+                if self.use_board:
+                    img = self.plot_synth()
+                    self.write2board(g_iter,d_loss,g_loss,img)
 
 
             torch.cuda.empty_cache()
 
         self.save_model()
+        self.writer.close()
         print("Finished Training!!")
     
 
