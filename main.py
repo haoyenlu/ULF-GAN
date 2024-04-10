@@ -4,37 +4,7 @@ import numpy as np
 import torch
 
 
-from models import WGAN
-
-def get_task_data(dataset,task):
-    tasks = dataset._get_task_files()
-
-    sequences = []
-    max_seq_len = 0
-    for _f in tasks[task]:
-        data = dataset._get_data_from_file(_f)
-        seq_len = data.shape[0]
-        max_seq_len = max(max_seq_len,seq_len)
-        sequences.append(data)
-
-    data = pad_sequence(sequences,max_seq_len)
-    data = data.transpose((0,2,1))
-    return data,max_seq_len
-
-
-def pad_sequence(sequences,max_seq_len):
-    sequences_pad = []
-    for seq in sequences:
-        start = (max_seq_len - len(seq)) // 2
-        end = start
-        if (max_seq_len - len(seq)) % 2 != 0: start += 1
-        x = np.pad(seq[:,0],(start,end),mode="edge")
-        y = np.pad(seq[:,1],(start,end),mode="edge")
-        z = np.pad(seq[:,2],(start,end),mode="edge")
-        s = np.stack([x,y,z],axis=1)
-        sequences_pad.append(s)
-
-    return np.array(sequences_pad)
+from networks import GAN
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -48,6 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--task',help="Task to train on",default='T01')
     parser.add_argument('--n_critic',type=int,help="Number of iterations for Discriminator per one Generator iterations",default=5)
     parser.add_argument('--use_spectral',action='store_true')
+    parser.add_argument('--use_eeg',action="store_true")
 
 
     args = parser.parse_args()
@@ -62,8 +33,11 @@ if __name__ == '__main__':
     print(args.max_iter)
     print(feat,seq_len)
     print("Use Spectral Loss:{}".format(args.use_spectral))
-    wgan = WGAN(seq_len = seq_len, features=feat,n_critic=args.n_critic,g_hidden=args.g_hidden,d_hidden=args.d_hidden,max_iters=args.max_iter,
-            saveDir=args.saveDir,ckptPath=args.ckpt,prefix=args.task,use_spectral=args.use_spectral)
+    print("Use EEG GAN: {}".format(args.use_eeg))
+    wgan = GAN(seq_len = seq_len, features=feat,n_critic=args.n_critic,
+               g_hidden=args.g_hidden,d_hidden=args.d_hidden,max_iters=args.max_iter,
+            saveDir=args.saveDir,ckptPath=args.ckpt,prefix=args.task,
+            use_spectral=args.use_spectral,use_eeg=args.use_eeg)
     
     wgan.train(dataloader,show_summary=True)
 
