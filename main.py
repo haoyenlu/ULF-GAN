@@ -57,7 +57,7 @@ if __name__ == '__main__':
         
     elif args.model == "TIMEVAE":
         model = TimeVAE(seq_len = seq_len, feat_dim = feat, latent_dim= args.latent_dim,
-                        hidden_layer = args.hidden_layer,max_iters= args.max_iter
+                        hidden_layer = args.hidden_layer,max_iters= args.max_iter,
                         saveDir= args.saveDir, ckptPath= args.ckpt, prefix=args.task )
 
     model.train(dataloader)
