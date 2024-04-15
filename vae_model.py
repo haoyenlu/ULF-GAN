@@ -36,6 +36,7 @@ class VariationalAutoencoderConv(BaseVAE):
         self.dense_mean = nn.Linear(self.encoder_last_dense_dim,self.latent_dim)
         self.dense_var = nn.Linear(self.encoder_last_dense_dim,self.latent_dim)
 
+        print(self.encoder_last_dense_dim)
         self.first_decoder_dense = nn.Sequential(
             nn.Linear(self.latent_dim,self.encoder_last_dense_dim),
             nn.ReLU()

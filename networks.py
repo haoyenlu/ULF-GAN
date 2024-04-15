@@ -221,7 +221,7 @@ class TimeVAE:
         data = get_infinite_batch(dataloader)
 
         self.load_ckpt()
-        self.model.summary()
+        # self.model.summary()
         self.model.train()
 
         for iter in range(self.max_iters):
