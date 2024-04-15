@@ -56,7 +56,7 @@ if __name__ == '__main__':
                 use_spectral=args.use_spectral,use_eeg=False,use_board=args.use_board)
         
     elif args.model == "TIMEVAE":
-        model = TimeVAE(seq_len = seq_len, feat_dim = feat, latent_dim= args.hidden_dim,
+        model = TimeVAE(seq_len = seq_len, feat_dim = feat, latent_dim= args.latent_dim,
                         hidden_layer = args.hidden_layer,max_iters= args.max_iter
                         saveDir= args.saveDir, ckptPath= args.ckpt, prefix=args.task )
 
