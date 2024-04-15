@@ -253,7 +253,7 @@ class TimeVAE:
 
     def save_model(self):
         torch.save(self.model.state_dict(),
-                   f"{self.saveDir}/TimeVAE_{self.prefix}_{self.hidden_dim}_ckpt.pth")
+                   f"{self.saveDir}/TimeVAE_{self.prefix}_{self.latent_dim}_ckpt.pth")
         
     
     def load_ckpt(self):
