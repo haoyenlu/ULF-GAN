@@ -83,9 +83,9 @@ class VariationalAutoencoderConv(BaseVAE):
 
     def forward(self,X): # shape: (B,feats,seq_len)
         z_mean, z_log_var = self.encoding(X)
-
+        print(z_mean.shape,z_log_var.shape)
         z = self.sampling(z_mean,z_log_var)
-
+        print(z.shape)
         _z = self.decoding(z)
 
         return _z, (z_mean,z_log_var)
