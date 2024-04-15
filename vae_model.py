@@ -20,8 +20,7 @@ class BaseVAE(nn.Module):
     
     def summary(self):
         summary(self.encoder,(self.feat_dim,self.seq_len))
-        print(self.latent_dim)
-        summary(self.decoder,(self.latent_dim))
+        summary(self.decoder,(1,self.latent_dim))
 
 
  
