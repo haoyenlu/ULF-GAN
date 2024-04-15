@@ -205,6 +205,9 @@ class TimeVAE:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print("Train on {}".format(self.device))
+
+        
+        self.load_ckpt()
     
     def _get_reconstruction_loss(self,X,X_hat):
         def get_recon_loss_by_axis(X,X_hat,axis):
@@ -220,7 +223,6 @@ class TimeVAE:
     def train(self,dataloader):
         data = get_infinite_batch(dataloader)
 
-        self.load_ckpt()
         # self.model.summary()
         self.model.to(self.device)
         self.model.train()
