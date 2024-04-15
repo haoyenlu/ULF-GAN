@@ -19,8 +19,8 @@ class BaseVAE(nn.Module):
         return torch.normal(mean=z_mean,std=torch.exp(0.5*z_log_var))
     
     def summary(self):
-        summary(self.encoder,(1,self.feat_dim,self.seq_len))
-        summary(self.decoder,(1,self.latent_dim))
+        summary(self.encoder,(self.feat_dim,self.seq_len))
+        summary(self.decoder,(self.latent_dim))
 
 
  
