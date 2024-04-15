@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
 
     ''' VAE model '''
-    parser.add_argument('--latent_dim',type=int,help="Hidden dimension size",default=100)
+    parser.add_argument('--latent_dim',type=int,help="Latent Dimension Size",default=100)
     parser.add_argument('--hidden_layer',nargs='+',type=int)
 
 
