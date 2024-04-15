@@ -4,7 +4,7 @@ from torchsummary import summary
 
 class BaseVAE(nn.Module):
     def __init__(self,seq_len,feat_dim,latent_dim):
-        super(BaseVAE).__init__()
+        super(BaseVAE,self).__init__()
 
         self.seq_len = seq_len
         self.feat_dim = feat_dim
@@ -26,7 +26,7 @@ class BaseVAE(nn.Module):
  
 class VariationalAutoencoderConv(BaseVAE): 
     def __init__(self,hidden_layer_size,**kwargs):
-        super(VariationalAutoencoderConv).__init__(**kwargs)
+        super(VariationalAutoencoderConv,self).__init__(**kwargs)
 
         self.hidden_layer_size = hidden_layer_size # a list of out_channel
         self.encoder = self._get_encoder()
