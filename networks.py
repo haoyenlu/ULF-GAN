@@ -222,6 +222,7 @@ class TimeVAE:
 
         self.load_ckpt()
         # self.model.summary()
+        self.model.to(self.device)
         self.model.train()
 
         for iter in range(self.max_iters):
