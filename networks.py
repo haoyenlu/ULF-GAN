@@ -7,7 +7,11 @@ from torchsummary import summary
 
 import matplotlib.pyplot as plt
 
-from models import Generator, Discriminator, EEG_Generator , EEG_Discriminator
+from gan_model import Generator, Discriminator, EEG_Generator , EEG_Discriminator
+from vae_model import VariationalAutoencoderConv
+from utils import get_infinite_batch
+
+
 
 class GAN:
     def __init__(self,seq_len,features=3,n_critic=3,lr=5e-4,g_hidden=64,d_hidden=64,max_iters=1000,
@@ -48,13 +52,12 @@ class GAN:
 
         self.writer = SummaryWriter()
 
-    def train(self,dataloader,show_summary=False):
-        if show_summary:
-            summary(self.G,(1,self.seq_len))
-            summary(self.D,(self.features,self.seq_len))
+    def train(self,dataloader):
+        summary(self.G,(1,self.seq_len))
+        summary(self.D,(self.features,self.seq_len))
         
 
-        data = self.get_infinite_batch(dataloader)
+        data = get_infinite_batch(dataloader)
         batch_size = 4
 
         
@@ -130,10 +133,6 @@ class GAN:
             self.G.load_state_dict(ckpt['G_param'])
             self.D.load_state_dict(ckpt['D_param'])
 
-    def get_infinite_batch(self,dataloader):
-        while True:
-            for data in dataloader:
-                yield data
 
     def generate_samples(self,sample_size):
         z = torch.randn(sample_size,1,self.seq_len).to(self.device)
@@ -177,4 +176,94 @@ class GAN:
 
 
 
+
+class TimeVAE:
+    def __init__(self,seq_len,feat_dim,latent_dim,hidden_layer,
+                 lr = 1e-4, reconstruction_wt = 3.0,max_iters=1000,
+                 saveDir=None,ckptPath=None,prefix="T01"):
+
+        self.seq_len = seq_len
+        self.feat_dim = feat_dim
+        self.latent_dim = latent_dim
+        self.hidden_layer = hidden_layer
+        self.reconstruction_wt = reconstruction_wt
+        self.lr = lr
+        self.max_iters = max_iters
+
+        self.model = VariationalAutoencoderConv(
+            seq_len = seq_len,
+            feat_dim = feat_dim,
+            latent_dim = latent_dim,
+            hidden_layer_size=hidden_layer
+        )
+
+        self.optimizer = torch.optim.Adam(self.model.parameters(),lr=self.lr)
+
+        self.saveDir = saveDir
+        self.ckptPath = ckptPath
+        self.prefix = prefix
+
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print("Train on {}".format(self.device))
     
+    def _get_reconstruction_loss(self,X,X_hat):
+        def get_recon_loss_by_axis(X,X_hat,axis):
+            x_mean = torch.mean(X,dim=axis)
+            x_hat_mean = torch.mean(X_hat,dim=axis)
+            err = torch.nn.functional.mse_loss(x_hat_mean,x_mean,reduction="sum")
+            return err
+
+        err_all = torch.nn.functional.mse_loss(X_hat,X,reduction="sum")
+        err_all += get_recon_loss_by_axis(X,X_hat,axis=2) # time dimension
+        return err_all
+
+    def train(self,dataloader):
+        data = get_infinite_batch(dataloader)
+
+        self.load_ckpt()
+        self.model.summary()
+        self.model.train()
+
+        for iter in range(self.max_iters):
+            self.model.zero_grad()
+
+            X = torch.autograd.Variable(data.__next__()).float().to(self.device)
+            X_hat , (z_mean,z_log_var) = self.model(X)
+
+            reconstruction_loss = self._get_reconstruction_loss(X,X_hat)
+
+            kl_loss = -0.5 * (1 + z_log_var - torch.square(z_mean) - torch.exp(z_log_var))
+            kl_loss = torch.mean(kl_loss)
+
+            total_loss = kl_loss + self.reconstruction_wt * reconstruction_loss
+            total_loss.backward()
+            self.optimizer.step()
+
+            print(f"Iteration:{iter+1}/{self.max_iters},KL Loss:{kl_loss},Reconstruction Loss:{reconstruction_loss}")
+
+            if (iter+1) % 20 == 0:
+                self.save_model()
+            
+            torch.cuda.empty_cache()
+        
+        self.save_model()
+        print("Finished Training")
+
+
+    def save_model(self):
+        torch.save(self.model.state_dict(),
+                   f"{self.saveDir}/TimeVAE_{self.prefix}_{self.hidden_dim}_ckpt.pth")
+        
+    
+    def load_ckpt(self):
+        if self.ckptPath:
+            print("Loading Checkpoint...")
+            ckpt = torch.load(self.ckptPath,map_location=self.device)
+            self.model.load_state_dict(ckpt)
+
+    def generate_samples(self,sample_sizes):
+        samples = self.model.get_prior_samples(sample_sizes)
+        return samples
+    
+
+
