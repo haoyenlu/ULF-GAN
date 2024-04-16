@@ -266,7 +266,7 @@ class TimeVAE:
 
     def generate_samples(self,sample_sizes):
         samples = self.model.get_prior_samples(sample_sizes)
-        return samples
+        return samples.detach().cpu().numpy()
     
 
 

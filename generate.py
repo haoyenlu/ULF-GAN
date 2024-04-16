@@ -62,5 +62,5 @@ if __name__ == '__main__':
                         saveDir= args.saveDir, ckptPath= args.ckpt, prefix=args.task )
 
     
-    samples = model.generate_samples(args.sample_size).detach().cpu().numpy()
+    samples = model.generate_samples(args.sample_size)
     np.save(f"{args.saveSample}/{args.model}_{args.task}_samples.npy",samples)
